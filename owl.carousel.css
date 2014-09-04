@@ -1,0 +1,63 @@
+
+/* 
+ *  Core Owl Carousel CSS File
+ */
+.skac-carousel {
+  /*display: none;*/
+  width: 100%;
+  -webkit-tap-highlight-color: transparent;
+  /* position relative and z-index fix webkit rendering fonts issue */
+  position: relative;
+  z-index: 1;
+}
+.skac-carousel .skac-stage {
+  position: relative;
+  -ms-touch-action: pan-Y;
+}
+.skac-carousel .skac-stage:after {
+  content: ".";
+  display: block;
+  clear: both;
+  visibility: hidden;
+  line-height: 0;
+  height: 0;
+}
+.skac-carousel .skac-stage-outer {
+  position: relative;
+  overflow: hidden;
+  /* fix for flashing background */
+  -webkit-transform: translate3d(0px, 0px, 0px);
+}
+.skac-carousel .skac-controls .skac-nav .skac-prev,
+.skac-carousel .skac-controls .skac-nav .skac-next,
+.skac-carousel .skac-controls .skac-dot {
+  cursor: pointer;
+  cursor: hand;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+.skac-carousel .skac-item {
+  position: relative;
+  min-height: 1px;
+  float: left;
+  -webkit-backface-visibility: hidden;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+.skac-carousel .skac-item img {
+  display: block;
+  width: 100%;
+  -webkit-transform-style: preserve-3d;
+}
+
+/* No Js */
+.no-js .skac-carousel {
+  display: block;
+}

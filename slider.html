@@ -1,0 +1,382 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="reset.css">
+        <link rel="stylesheet" href="owl.carousel.css">
+        <style>
+    
+            body {
+                width: 900px;
+                margin: 0 auto;
+            }
+
+            .skac-carousel {
+                height: 300px;
+            }
+
+            .skac-item {
+                width: auto; height: 300px;
+            }
+
+            .resort-skac .skac-prev,
+            .resort-skac .skac-next {
+                position: absolute; left: 0; top: 0; z-index: 10;
+                width: 60px; height: 300px;
+                background-color: rgba(255, 255, 255, 0.6);
+                text-align: center;
+            }
+
+            .resort-skac .skac-prev:hover,
+            .resort-skac .skac-next:hover {
+                background-color: rgba(255, 255, 255, 0.8);
+            }
+
+            .resort-skac .skac-next {
+                left: auto; right: 0;
+            }
+
+            .resort-skac .skac-prev img,
+            .resort-skac .skac-next img{
+                display: inline-block;
+                padding-top: 140px;
+            }
+        </style>
+        <script src="jquery.core.js"></script>
+        <script src="jquery.wipetouch.js"></script>
+    </head>
+    <body>
+        <div id="jsResortSlider" class="resort-skac skac-carousel">
+            <div class="skac-stage-outer">
+                <div class="skac-stage">       
+                    <div class="skac-item">
+                        <div class="item" width="450">
+                            <img src="img/resort-slider-1.jpg" alt=""/>
+                        </div>
+                    </div>
+                    <div class="skac-item">
+                        <div class="item" width="225">
+                            <img src="img/resort-slider-2.jpg" alt=""/>
+                        </div>
+                    </div>
+                    <div class="skac-item">
+                        <div class="item" width="272">
+                            <img src="img/resort-slider-3.jpg" alt=""/>
+                        </div>
+                    </div>
+                    <div class="skac-item">
+                        <div class="item" width="225">
+                            <img src="img/resort-slider-2.jpg" alt=""/>
+                        </div>
+                    </div>
+                    <div class="skac-item">
+                        <div class="item" width="450">
+                            <img src="img/resort-slider-1.jpg" alt=""/>
+                        </div>
+                    </div>
+                    <div class="skac-item">
+                        <div class="item" width="272">
+                            <img src="img/resort-slider-3.jpg" alt=""/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="skac-controls">
+                <div class="skac-nav">
+                    <a href="#" class="skac-prev" style="display: none"><img src='/img/interface/black-arrow-left.png' /></a>
+                    <a href="#" class="skac-next"><img src='/img/interface/black-arrow-left.png' /></a>
+                </div>
+            </div>
+        </div>
+        <div id="resort-mobile"></div>
+        <script>
+/***
+ * Skimuim auto-width carousel (skac)
+ * ==================================
+ * => basé sur owl carousel 2
+ * @see http://www.owlcarousel.owlgraphic.com/demos/autowidth.html
+ *
+ * Pourquoi ne pas utiliser Owl-Carousel 2 ?
+ * => parce qu'il nécésite au minimum jquery 1.8, 
+ *    et sur Skimium c'est la version 1.7.1
+ *
+ * Le plugin est-il réutilisable ?
+ * => il faudrait l'adapter, l'améliorer et le transformer en plugin 
+ */
+
+// Import d'un plugin permettant d'utiliser la fonction translate3d() comme celle de animate()
+// http://cameronspear.com/blog/animating-translate3d-with-jquery/
+;(function($) {
+    var delay = 0;
+    $.fn.translate3d = function(translations, speed, easing, complete) {
+        var opt = $.speed(speed, easing, complete);
+        opt.easing = opt.easing || 'ease';
+        translations = $.extend({x: 0, y: 0, z: 0}, translations);
+
+        return this.each(function() {
+            var $this = $(this);
+
+            $this.css({ 
+                transitionDuration: opt.duration + 'ms',
+                transitionTimingFunction: opt.easing,
+                transform: 'translate3d(' + translations.x + 'px, ' + translations.y + 'px, ' + translations.z + 'px)'
+            });
+
+            setTimeout(function() { 
+                $this.css({ 
+                    transitionDuration: '0s', 
+                    transitionTimingFunction: 'ease'
+                });
+
+                opt.complete();
+            }, opt.duration + (delay || 0));
+        });
+    };
+})(jQuery);
+
+var ResortCarousel = {
+
+    cache: {},
+
+    init: function() {
+
+        this.cache.$slider = $( document.getElementById('jsResortSlider') );
+
+        if( this.cache.$slider.length && document.getElementById('resort-mobile').style.display != 'none' )
+        {
+            this.saveVar();
+            this.cache.initOnLoad = true;
+            this.setWidthStage();
+            this.calculateLastSlide();
+
+            this.cache.$sliderPrev.on('click', function(e) {
+                e.preventDefault();
+                
+                ResortCarousel.moveSlider('left');
+            });
+
+            this.cache.$sliderNext.on('click', function(e) {
+                e.preventDefault();
+                
+                ResortCarousel.moveSlider('right');
+            });
+
+            // Ajout du comportement du swipe
+            this.cache.$slider.wipetouch({
+                wipeLeft:  function() { ResortCarousel.moveSlider('right'); },
+                wipeRight: function() { ResortCarousel.moveSlider('left'); }
+            });
+        }
+    },
+
+    supports3d: function() {
+
+        // Get translate3D support
+        var supportedPrefix,
+            supports3d = false,
+            prefixes = [ "Webkit", "Moz", "ms", "O" ],
+            div = document.createElement("div");
+     
+        if ( div.style.perspective !== undefined ) {
+            /*Browser supports CSS transform 3d without prefix*/
+            supportedPrefix = "";
+            supports3d = true;
+        } else {
+            for ( var i = 0; i < prefixes.length; ++i ) {
+                if((prefixes[i] + "Perspective") in div.style) {
+                    supports3d = true;
+                    supportedPrefix = prefixes[i];
+                    break;
+                }
+            }
+        }
+
+        this.cache.supports3d = supports3d;
+    },
+
+    saveVar: function() {
+
+        var otherVar = {
+
+            // Les éléments
+            $sliderStage:  this.cache.$slider.find('.skac-stage'),
+            $sliderPrev:   this.cache.$slider.find('.skac-prev'),
+            $sliderNext:   this.cache.$slider.find('.skac-next'),
+            $sliderItem:   this.cache.$slider.find('.item'),
+
+            // Les paramètres
+            widthStage:    0,
+            currentPos:    0,
+            currentSlide:  0,
+            stopAction:    false,
+            animSpeed:     500,
+            posBeforeLastSlide:  false,
+            initOnLoad:  false
+        };
+
+        $.extend(this.cache, otherVar);
+
+        this.cache.lastSlide = this.cache.$sliderItem.length - 1;
+
+        this.cache.lastSlideMove = this.cache.lastSlide;
+    },
+
+    // Set taille du conteneur des images
+    setWidthStage: function() {
+
+        for (var i = 0; i < this.cache.$sliderItem.length; i++) {
+            this.cache.widthStage += parseInt( this.cache.$sliderItem.eq(i).attr('width') );
+        };
+
+        this.cache.$sliderStage.css('width', this.cache.widthStage);
+    },
+
+    // Calcul du slide à partir duquel on ne pourra plus "slider" vers la droite
+    // @todo: à amélioré pour une infini d'image
+    calculateLastSlide: function() {
+
+        this.cache.widthSlider = this.cache.$slider.width();
+
+        var widthLastSlide = this.cache.$sliderItem.eq(this.cache.lastSlide).width();
+
+        if( widthLastSlide <= this.cache.widthSlider ) 
+        {
+            var widthLastSlideLess1 = this.cache.$sliderItem.eq(this.cache.lastSlide - 1).width();
+
+            if( ( widthLastSlide + widthLastSlideLess1 ) <= this.cache.widthSlider )
+            {
+                this.cache.lastSlideMove = this.cache.lastSlide - 2;
+            }
+            else {
+                var widthLastSlideLess2 = this.cache.$sliderItem.eq(this.cache.lastSlide - 2).width();  
+
+                if( ( widthLastSlide + widthLastSlideLess1 + widthLastSlideLess2 ) <= this.cache.widthSlider )
+                {
+                    this.cache.lastSlideMove = this.cache.lastSlide - 3;
+                }
+                else {
+                    var widthLastSlideLess3 = this.cache.$sliderItem.eq(this.cache.lastSlide - 3).width(); 
+
+                    if( ( widthLastSlide + widthLastSlideLess1 + widthLastSlideLess2 + widthLastSlideLess3 ) <= this.cache.widthSlider )
+                    {
+                        this.cache.lastSlideMove = this.cache.lastSlide - 4;
+
+                        //si le total des 3 dernières images est inférieur à la taille du slider, alors continuer les conditions
+                    }
+                }
+            }
+        }
+    },
+
+    // Déplace le slider 
+    // => utilise translate3D() si support, sinon animate()
+    moveSliderPosition: function(positionX) {
+
+        if( this.cache.supports3d )
+        { 
+            this.cache.$sliderStage.translate3d({
+               x: positionX, 
+               y: 0, 
+               z: 0
+            }, this.cache.animSpeed);
+        }
+        else {
+            this.cache.$sliderStage.animate({
+               left: positionX
+            }, this.cache.animSpeed);
+        }
+    },
+
+    // Empêche une 2ème action quand la première n'est pas terminé
+    setStopAction: function() {
+
+        this.cache.stopAction = true;
+
+        setTimeout(function() {
+            ResortCarousel.cache.stopAction = false;
+        }, this.cache.animSpeed);
+    },
+
+    // Calcul de combien déplacer le slider
+    moveSlider: function(axeX) {
+        var qty;
+
+        if( !this.cache.stopAction ) 
+        {
+            this.setStopAction();
+
+            if( axeX == 'left') 
+            {
+                // Déplacer vess la gauche si ce n'est pas déjà le premier slide
+                if( !this.cache.currentSlide == 0 ) 
+                {
+                    this.cache.$sliderNext.show();
+                    qty = parseInt( this.cache.$sliderItem.eq(this.cache.currentSlide - 1).attr('width') );
+
+                    if( this.cache.posBeforeLastSlide ) 
+                    {
+                        this.cache.currentPos = this.cache.posBeforeLastSlide;
+                        this.cache.posBeforeLastSlide = false;
+                    }
+                    else {
+                        this.cache.currentPos += qty;
+                    }
+                    this.moveSliderPosition(this.cache.currentPos);
+                    this.cache.currentSlide--;    
+                }
+
+                if( this.cache.currentPos == 0 )
+                    this.cache.$sliderPrev.hide();
+            }
+            else {
+
+                // // Si le slide à partir duquel on ne pourra plus "slider" vers la droite
+                //      est le suivant, save la position avant de placer le slider à la fin
+                if( (this.cache.currentSlide + 1) == this.cache.lastSlideMove ) 
+                    this.cache.posBeforeLastSlide = this.cache.currentPos;
+
+                // Déplace vers la droite d'un slide
+                if( this.cache.currentSlide != this.cache.lastSlideMove ) 
+                {
+                    this.cache.$sliderPrev.show();
+                    qty = parseInt( this.cache.$sliderItem.eq(this.cache.currentSlide).attr('width') );
+                    this.cache.currentPos -= qty;
+                }
+
+                // Si le slide à partir duquel on ne pourra plus "slider" vers la droite
+                //      est le suivant, alors il ne faut pas déplacer le slider de la largeur
+                //      de la slide courante mais déplacer jusqu'à la fin
+                if( (this.cache.currentSlide + 1) == this.cache.lastSlideMove ) 
+                {
+                    // Maintenant on le place à la fin
+                    qty = this.cache.widthStage - this.cache.widthSlider;
+                    this.cache.currentPos = qty * -1;
+                }
+
+                // Déplace le slide
+                this.moveSliderPosition(this.cache.currentPos);
+
+                // Garde en mémoire le slide courant
+                this.cache.currentSlide++;
+
+                if( this.cache.currentSlide == this.cache.lastSlideMove ) 
+                    this.cache.$sliderNext.hide();
+            }
+        }
+    },
+}
+
+
+$(window).load( function(){
+
+    ResortCarousel.init();
+});
+
+$(window).resize( function(){
+
+    // Au resize, le conteneur des images de change pas 
+    //     mais il faut recalculer le dernier slide
+    if( ResortCarousel.cache.initOnLoad )
+        ResortCarousel.calculateLastSlide();
+});
+        </script>
+    </body>
+</html>
